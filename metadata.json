@@ -1,0 +1,6 @@
+{
+  "name": "ذِمم — دفتر الديون ومواعيد التحصيل",
+  "description": "برنامج منظم لإدارة ومتابعة الديون والمستحقات المالية لدى الغير، مع سجل الدفعات، كشوف حسابات الأشخاص، وجدول مواعيد التحصيل.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,635 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account preferences, avatar, status indicator, theme, and language settings.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth user ID."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "User display name shown in header."
+        },
+        "avatarUrl": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120000,
+          "description": "Pixar avatar key or compressed base64 profile image."
+        },
+        "statusActive": {
+          "type": "boolean",
+          "description": "Toggleable green pulsing status dot next to user name."
+        },
+        "statusLabel": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40,
+          "description": "Optional status text next to the flashing indicator."
+        },
+        "statusColor": {
+          "type": "string",
+          "enum": ["green", "yellow", "red"],
+          "description": "Flashing status indicator color."
+        },
+        "avatarRingColor": {
+          "type": "string",
+          "enum": ["none", "green", "red", "auto"],
+          "description": "Ring color around profile and character images."
+        },
+        "avatarRingStyle": {
+          "type": "string",
+          "enum": ["solid", "glow", "double", "dashed", "pulse"],
+          "description": "Visual appearance of the ring around images."
+        },
+        "theme": {
+          "type": "string",
+          "enum": ["mint", "sky", "lavender", "amber", "dark"],
+          "description": "Selected visual theme."
+        },
+        "followPhoneTheme": {
+          "type": "boolean",
+          "description": "Whether app and icons follow the phone dark/light appearance."
+        },
+        "autoAppIconByTheme": {
+          "type": "boolean",
+          "description": "Whether external app icon adapts automatically to the selected app theme."
+        },
+        "language": {
+          "type": "string",
+          "enum": ["ar", "en"],
+          "description": "Selected UI language and RTL/LTR direction."
+        },
+        "defaultCurrency": {
+          "type": "string",
+          "enum": ["EGP", "SAR", "AED", "KWD", "USD", "ج.م", "ر.س", "د.إ", "د.ك", "$"],
+          "description": "Default currency code."
+        },
+        "iconSize": {
+          "type": "string",
+          "enum": ["xxs", "xs", "sm", "md", "lg", "xl"],
+          "description": "Preferred general UI icon size."
+        },
+        "navIconSize": {
+          "type": "string",
+          "enum": ["xxs", "xs", "sm", "md", "lg", "xl"],
+          "description": "Preferred bottom navigation bar icon size."
+        },
+        "avatarSize": {
+          "type": "string",
+          "enum": ["xxs", "xs", "sm", "md", "lg", "xl"],
+          "description": "Preferred people and character avatar image size."
+        },
+        "profileAvatarSize": {
+          "type": "string",
+          "enum": ["xxs", "xs", "sm", "md", "lg", "xl"],
+          "description": "Preferred user profile picture size in the top header."
+        },
+        "walletImageSize": {
+          "type": "string",
+          "enum": ["xxs", "xs", "sm", "md", "lg", "xl"],
+          "description": "Preferred wallet image and logo size."
+        },
+        "iconStyle": {
+          "type": "string",
+          "enum": ["samsung", "colored_badge", "colored_line", "mono_outline", "mono_filled", "theme_adaptive"],
+          "description": "Overall app icon visual style."
+        },
+        "sectionIconStyles": {
+          "type": "object",
+          "description": "Optional per-section icon style overrides for nav, header, people, wallets, and settings."
+        },
+        "pageSettings": {
+          "type": "object",
+          "description": "Per-page custom size, icon size, image size, and icon style for receivables, payables, and wallets."
+        },
+        "navSoundEnabled": {
+          "type": "boolean",
+          "description": "Whether navigation sound effects are enabled."
+        },
+        "appIconId": {
+          "type": "string",
+          "enum": [
+            "samsung_white_wallet", "samsung_white_card", "samsung_white_finance", "samsung_pearl_m",
+            "samsung_mint_wallet", "samsung_mint_card", "samsung_mint_coins", "samsung_mint_soft",
+            "samsung_sky_wallet", "samsung_sky_card", "samsung_sky_soft", "samsung_sky_bank",
+            "samsung_cobalt_visa", "samsung_gold_card", "samsung_teal_transfer", "samsung_obsidian_card"
+          ],
+          "description": "Selected Samsung One UI external phone launcher icon (White, Mint, Sky Blue, Financial Designs & Bank Cards)."
+        },
+        "navIcons": {
+          "type": "object",
+          "description": "Selected icon keys for the 3 bottom navigation tabs."
+        },
+        "refreshRateHz": {
+          "type": "number",
+          "enum": [60, 90, 120],
+          "description": "Preferred UI smoothness and display refresh rate in Hz."
+        },
+        "notificationSettings": {
+          "type": "object",
+          "description": "Payment-due phone notification schedule, tone, sound/vibration/wake/full-screen toggles, and alert display format."
+        },
+        "hideAmounts": {
+          "type": "boolean",
+          "description": "Whether customer balances, payments, and outside totals are masked for privacy."
+        },
+        "showPrivacyToggle": {
+          "type": "boolean",
+          "description": "Whether the outside quick hide/show balance toggle button is visible in the top header."
+        },
+        "hideWalletAmounts": {
+          "type": "boolean",
+          "description": "Independent toggle controlling whether balances and transactions inside the Wallets page are hidden."
+        },
+        "showWalletPrivacyToggle": {
+          "type": "boolean",
+          "description": "Whether the dedicated privacy hide/show button inside the Wallets page is visible."
+        },
+        "wallpaperId": {
+          "type": "string",
+          "description": "Selected WhatsApp/Telegram-style colorful illustrated wallpaper theme for the app."
+        },
+        "walletIcons": {
+          "type": "object",
+          "description": "Selected internal wallet icons (official original app icon plus 5 additional styles each) for instapay, vodafone_cash, and cash."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last preferences update timestamp."
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "avatarUrl",
+        "statusActive",
+        "statusLabel",
+        "theme",
+        "language",
+        "defaultCurrency",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Debt": {
+      "title": "Debt",
+      "description": "A receivable (owed to user) or payable (owed by user) record.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the user who owns this record."
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["receivable", "payable"],
+          "description": "Whether money is owed to the user or owed by the user."
+        },
+        "debtorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Name of the person."
+        },
+        "debtorPhone": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 30,
+          "description": "Optional phone number."
+        },
+        "avatarId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120000,
+          "description": "Selected Pixar avatar key or custom image data URI."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140,
+          "description": "Reason or description."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["سلفة شخصية", "تجارة وبضاعة", "شراكة وعمل", "أخرى"],
+          "description": "Debt category."
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "Original total amount."
+        },
+        "paidAmount": {
+          "type": "number",
+          "description": "Cumulative amount paid/collected so far."
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["EGP", "SAR", "AED", "KWD", "USD", "ج.م", "ر.س", "د.إ", "د.ك", "$"],
+          "description": "Currency code."
+        },
+        "givenDate": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Start date (YYYY-MM-DD)."
+        },
+        "dueDate": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Due date (YYYY-MM-DD)."
+        },
+        "installmentPlan": {
+          "type": "string",
+          "enum": ["دفعة واحدة", "أقساط شهرية", "دفعات مرنة"],
+          "description": "Repayment plan."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["نشط", "جزئي", "محصل"],
+          "description": "Settlement status."
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 500,
+          "description": "Optional notes."
+        },
+        "alertLevel": {
+          "type": "string",
+          "enum": ["none", "warning", "urgent", "reminder"],
+          "description": "Optional warning or alert badge level displayed next to the person."
+        },
+        "alertNote": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80,
+          "description": "Optional short alert note displayed with the person warning/alert."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "direction",
+        "debtorName",
+        "debtorPhone",
+        "avatarId",
+        "title",
+        "category",
+        "totalAmount",
+        "paidAmount",
+        "currency",
+        "givenDate",
+        "dueDate",
+        "installmentPlan",
+        "status",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "An individual payment installment logged against a debt.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of owner."
+        },
+        "debtId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Parent debt ID."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Payment amount."
+        },
+        "paymentDate": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Date payment was made (YYYY-MM-DD)."
+        },
+        "method": {
+          "type": "string",
+          "enum": ["نقدي", "تحويل بنكي", "محفظة إلكترونية", "أخرى"],
+          "description": "Payment channel."
+        },
+        "note": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200,
+          "description": "Optional note."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp."
+        }
+      },
+      "required": ["ownerId", "debtId", "amount", "paymentDate", "method", "note", "createdAt"]
+    },
+    "Wallet": {
+      "title": "Wallet",
+      "description": "Available personal balance wallet (InstaPay, Vodafone Cash, Cash).",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of wallet owner."
+        },
+        "walletType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Wallet type identifier (built-in or custom app)."
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Display label."
+        },
+        "iconId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Optional selected icon key for custom wallet apps."
+        },
+        "balance": {
+          "type": "number",
+          "description": "Current wallet balance (>= 0)."
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["EGP", "SAR", "AED", "KWD", "USD", "ج.م", "ر.س", "د.إ", "د.ك", "$"],
+          "description": "Currency code."
+        },
+        "isHidden": {
+          "type": "boolean",
+          "description": "Whether the wallet card is currently hidden/deleted by user."
+        },
+        "recentNote": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 140,
+          "description": "Recent balance change note."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "walletType",
+        "label",
+        "balance",
+        "currency",
+        "isHidden",
+        "recentNote",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Charge": {
+      "title": "Charge",
+      "description": "An additional amount charged against an existing debt record.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of owner."
+        },
+        "debtId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Parent debt ID."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Added charge amount (> 0)."
+        },
+        "chargeDate": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Date charge was added (YYYY-MM-DD)."
+        },
+        "note": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200,
+          "description": "Optional note."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp."
+        }
+      },
+      "required": ["ownerId", "debtId", "amount", "chargeDate", "note", "createdAt"]
+    },
+    "WalletTransaction": {
+      "title": "WalletTransaction",
+      "description": "An add or withdraw transaction logged against a personal wallet.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of transaction owner."
+        },
+        "walletId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Referenced wallet document ID."
+        },
+        "walletType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Wallet type identifier (built-in or custom app)."
+        },
+        "walletLabel": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 60,
+          "description": "Optional display label for custom wallet apps."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["add", "withdraw"],
+          "description": "Transaction direction."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Transaction amount (> 0)."
+        },
+        "note": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 140,
+          "description": "Optional transaction note."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp."
+        }
+      },
+      "required": ["ownerId", "walletId", "walletType", "type", "amount", "note", "createdAt"]
+    },
+    "BackupVault": {
+      "title": "BackupVault",
+      "description": "Self-contained cloud backup snapshot keyed by SHA-256 hash of user-entered email or phone number (no raw PII stored, backups only).",
+      "type": "object",
+      "properties": {
+        "vaultId": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 hash of normalized phone number or email address."
+        },
+        "version": {
+          "type": "number",
+          "description": "Backup vault schema version (2)."
+        },
+        "profile": {
+          "type": "object",
+          "description": "Backed up profile preferences."
+        },
+        "debts": {
+          "type": "array",
+          "description": "Backed up receivable and payable records (max 500)."
+        },
+        "paymentsByDebt": {
+          "type": "object",
+          "description": "Backed up payment logs indexed by debt ID."
+        },
+        "chargesByDebt": {
+          "type": "object",
+          "description": "Backed up charge logs indexed by debt ID."
+        },
+        "wallets": {
+          "type": "array",
+          "description": "Backed up personal wallets (max 20)."
+        },
+        "walletTxs": {
+          "type": "array",
+          "description": "Backed up wallet transactions (max 500)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last backup timestamp."
+        }
+      },
+      "required": [
+        "vaultId",
+        "version",
+        "profile",
+        "debts",
+        "paymentsByDebt",
+        "chargesByDebt",
+        "wallets",
+        "walletTxs",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile, avatar, status toggle, theme, and language settings."
+    },
+    "/debts/{debtId}": {
+      "schema": { "$ref": "#/entities/Debt" },
+      "description": "Receivables and payables owned by authenticated users."
+    },
+    "/debts/{debtId}/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/Payment" },
+      "description": "Payment logs belonging to a parent debt."
+    },
+    "/debts/{debtId}/charges/{chargeId}": {
+      "schema": { "$ref": "#/entities/Charge" },
+      "description": "Additional charge logs belonging to a parent debt."
+    },
+    "/wallets/{walletId}": {
+      "schema": { "$ref": "#/entities/Wallet" },
+      "description": "User personal balance wallets (InstaPay, Vodafone Cash, Cash)."
+    },
+    "/walletTransactions/{txId}": {
+      "schema": { "$ref": "#/entities/WalletTransaction" },
+      "description": "Add and withdraw transaction logs for user wallets."
+    },
+    "/backupVaults/{vaultId}": {
+      "schema": { "$ref": "#/entities/BackupVault" },
+      "description": "Backup-only cloud snapshots keyed by 64-char SHA-256 hash of email or phone number."
+    }
+  }
+}

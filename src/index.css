@@ -1,0 +1,60 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-sans: "IBM Plex Sans Arabic", system-ui, -apple-system, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+    --moamen-motion-ms: 135ms;
+    --moamen-swipe-ms: 165ms;
+    --moamen-ease: cubic-bezier(0.16, 0.98, 0.22, 1);
+  }
+
+  html,
+  body {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+    overscroll-behavior-x: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  .moamen-smooth {
+    transition-duration: var(--moamen-motion-ms, 160ms);
+    transition-timing-function: var(--moamen-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .font-mono-num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

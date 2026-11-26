@@ -1,0 +1,617 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Hardened Primitives ---
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidDateString(d) {
+      return d is string && d.size() == 10 && d.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
+    function isValidCurrency(c) {
+      return c in ['EGP', 'SAR', 'AED', 'KWD', 'USD', 'ج.م', 'ر.س', 'د.إ', 'د.ك', '$'];
+    }
+
+    function isValidNavIconKey(k) {
+      return k in [
+        'arrow_down_left', 'arrow_up_right', 'arrow_down_line', 'arrow_up_line',
+        'inbox', 'send', 'wallet', 'credit_card', 'banknote', 'coins',
+        'hand_coins', 'piggy_bank', 'landmark', 'receipt', 'dollar',
+        'briefcase', 'trending_up', 'trending_down',
+        'arrow_down_circle', 'arrow_up_circle', 'repeat', 'users',
+        'user_check', 'user_plus', 'user_minus', 'home', 'shopping_bag',
+        'shopping_cart', 'gem', 'vault', 'shield_check', 'pie_chart',
+        'bar_chart', 'calculator', 'calendar_check', 'clock', 'star',
+        'heart', 'bookmark', 'bell', 'layers', 'sparkles'
+      ];
+    }
+
+    function isValidNavIconsMap(m) {
+      return m is map
+        && m.keys().hasAll(['receivables', 'payables', 'wallets'])
+        && m.keys().hasOnly(['receivables', 'payables', 'wallets'])
+        && isValidNavIconKey(m.receivables)
+        && isValidNavIconKey(m.payables)
+        && isValidNavIconKey(m.wallets);
+    }
+
+    function isValidWalletIconsMap(m) {
+      return m is map
+        && m.keys().hasAll(['instapay', 'vodafone_cash', 'cash'])
+        && m.keys().hasOnly(['instapay', 'vodafone_cash', 'cash'])
+        && m.instapay in [
+          'instapay_official', 'instapay_violet_bolt', 'instapay_sunset_flash',
+          'instapay_cyan_rocket', 'instapay_mint_card', 'instapay_neon_pulse'
+        ]
+        && m.vodafone_cash in [
+          'vodafone_official', 'vodafone_classic_red', 'vodafone_ruby_wallet',
+          'vodafone_coral_phone', 'vodafone_berry_orb', 'vodafone_dark_crimson'
+        ]
+        && m.cash in [
+          'cash_official', 'cash_emerald_bill', 'cash_gold_coins',
+          'cash_mint_bundle', 'cash_sky_wallet', 'cash_royal_bag'
+        ];
+    }
+
+    function isValidIconStyle(s) {
+      return s in [
+        'samsung', 'pixar', 'colored_badge', 'colored_line',
+        'mono_outline', 'mono_filled', 'theme_adaptive'
+      ];
+    }
+
+    function isValidSectionStyleValue(s) {
+      return s == 'inherit' || isValidIconStyle(s);
+    }
+
+    function isValidSectionIconStyles(m) {
+      return m is map
+        && (
+          m.size() == 0
+          || (
+            m.keys().hasOnly(['nav', 'header', 'people', 'wallets', 'settings'])
+            && (!('nav' in m) || isValidSectionStyleValue(m.nav))
+            && (!('header' in m) || isValidSectionStyleValue(m.header))
+            && (!('people' in m) || isValidSectionStyleValue(m.people))
+            && (!('wallets' in m) || isValidSectionStyleValue(m.wallets))
+            && (!('settings' in m) || isValidSectionStyleValue(m.settings))
+          )
+        );
+    }
+
+    function isValidPageSizeChoice(v) {
+      return v == 'inherit' || v in ['xxs', 'xs', 'sm', 'md', 'lg', 'xl'];
+    }
+
+    function isValidWallpaperId(w) {
+      return w is string && w.size() >= 1 && w.size() <= 40 && w.matches('^[a-z0-9_]+$');
+    }
+
+    function isValidPageEntry(p) {
+      return p is map
+        && (
+          p.size() == 0
+          || (
+            p.keys().hasOnly(['pageScale', 'iconSize', 'avatarSize', 'iconStyle', 'wallpaperId'])
+            && (!('pageScale' in p) || p.pageScale in ['inherit', 'compact', 'normal', 'large'])
+            && (!('iconSize' in p) || isValidPageSizeChoice(p.iconSize))
+            && (!('avatarSize' in p) || isValidPageSizeChoice(p.avatarSize))
+            && (!('iconStyle' in p) || isValidSectionStyleValue(p.iconStyle))
+            && (!('wallpaperId' in p) || p.wallpaperId == 'inherit' || isValidWallpaperId(p.wallpaperId))
+          )
+        );
+    }
+
+    function isValidPageSettings(m) {
+      return m is map
+        && (
+          m.size() == 0
+          || (
+            m.keys().hasOnly(['receivables', 'payables', 'wallets'])
+            && (!('receivables' in m) || isValidPageEntry(m.receivables))
+            && (!('payables' in m) || isValidPageEntry(m.payables))
+            && (!('wallets' in m) || isValidPageEntry(m.wallets))
+          )
+        );
+    }
+
+    function isValidNotificationSettings(m) {
+      return m is map
+        && m.keys().hasOnly([
+          'enabled', 'alertStyle', 'alertTone', 'personAlertFormat', 'notifyDaysBefore',
+          'notifyTime', 'notifyOverdueDaily', 'notifyDirections',
+          'soundEnabled', 'vibrateEnabled', 'wakeScreen', 'fullScreenAlert'
+        ])
+        && (!('enabled' in m) || m.enabled is bool)
+        && (!('alertStyle' in m) || m.alertStyle in ['banner', 'urgent', 'detailed', 'compact'])
+        && (!('alertTone' in m) || m.alertTone in [
+          'chime', 'coin', 'samsung', 'urgent', 'crystal', 'system',
+          'classic_ring', 'marimba_long', 'radar_bell', 'melody_gold', 'soft_harp', 'alarm_pulse'
+        ])
+        && (!('personAlertFormat' in m) || m.personAlertFormat in ['badge', 'icon', 'pulse', 'banner'])
+        && (!('notifyDaysBefore' in m) || m.notifyDaysBefore in [0, 1, 2, 3])
+        && (!('notifyTime' in m) || (m.notifyTime is string && m.notifyTime.size() == 5 && m.notifyTime.matches('^([01]\\d|2[0-3]):[0-5]\\d$')))
+        && (!('notifyOverdueDaily' in m) || m.notifyOverdueDaily is bool)
+        && (!('notifyDirections' in m) || m.notifyDirections in ['receivables', 'both'])
+        && (!('soundEnabled' in m) || m.soundEnabled is bool)
+        && (!('vibrateEnabled' in m) || m.vibrateEnabled is bool)
+        && (!('wakeScreen' in m) || m.wakeScreen is bool)
+        && (!('fullScreenAlert' in m) || m.fullScreenAlert is bool);
+    }
+
+    // --- Entity Validation Blueprints ---
+    function isValidUserProfile(data) {
+      return data.keys().hasAll([
+          'uid', 'displayName', 'avatarUrl', 'statusActive', 'statusLabel',
+          'theme', 'language', 'defaultCurrency', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'displayName', 'avatarUrl', 'statusActive', 'statusLabel',
+          'statusColor', 'avatarRingColor', 'avatarRingStyle',
+          'theme', 'followPhoneTheme', 'autoAppIconByTheme',
+          'language', 'defaultCurrency', 'createdAt', 'updatedAt',
+          'iconSize', 'navIconSize', 'avatarSize', 'profileAvatarSize', 'walletImageSize',
+          'iconStyle', 'sectionIconStyles', 'pageSettings',
+          'navSoundEnabled', 'appIconId', 'navIcons',
+          'refreshRateHz', 'notificationSettings',
+          'hideAmounts', 'showPrivacyToggle',
+          'hideWalletAmounts', 'showWalletPrivacyToggle', 'wallpaperId', 'walletIcons'
+        ])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100
+        && data.avatarUrl is string && data.avatarUrl.size() <= 120000
+        && data.statusActive is bool
+        && data.statusLabel is string && data.statusLabel.size() <= 40
+        && (!('statusColor' in data) || data.statusColor in ['green', 'yellow', 'red'])
+        && (!('avatarRingColor' in data) || data.avatarRingColor in ['none', 'green', 'red', 'auto'])
+        && (!('avatarRingStyle' in data) || data.avatarRingStyle in ['solid', 'glow', 'double', 'dashed', 'pulse'])
+        && data.theme in ['mint', 'sky', 'lavender', 'amber', 'dark']
+        && (!('followPhoneTheme' in data) || data.followPhoneTheme is bool)
+        && (!('autoAppIconByTheme' in data) || data.autoAppIconByTheme is bool)
+        && data.language in ['ar', 'en']
+        && isValidCurrency(data.defaultCurrency)
+        && (!('iconSize' in data) || data.iconSize in ['xxs', 'xs', 'sm', 'md', 'lg', 'xl'])
+        && (!('navIconSize' in data) || data.navIconSize in ['xxs', 'xs', 'sm', 'md', 'lg', 'xl'])
+        && (!('avatarSize' in data) || data.avatarSize in ['xxs', 'xs', 'sm', 'md', 'lg', 'xl'])
+        && (!('profileAvatarSize' in data) || data.profileAvatarSize in ['xxs', 'xs', 'sm', 'md', 'lg', 'xl'])
+        && (!('walletImageSize' in data) || data.walletImageSize in ['xxs', 'xs', 'sm', 'md', 'lg', 'xl'])
+        && (!('iconStyle' in data) || isValidIconStyle(data.iconStyle))
+        && (!('sectionIconStyles' in data) || isValidSectionIconStyles(data.sectionIconStyles))
+        && (!('pageSettings' in data) || isValidPageSettings(data.pageSettings))
+        && (!('navSoundEnabled' in data) || data.navSoundEnabled is bool)
+        && (!('appIconId' in data) || data.appIconId in [
+          'samsung_white_wallet', 'samsung_white_card', 'samsung_white_finance', 'samsung_pearl_m',
+          'samsung_mint_wallet', 'samsung_mint_card', 'samsung_mint_coins', 'samsung_mint_soft',
+          'samsung_sky_wallet', 'samsung_sky_card', 'samsung_sky_soft', 'samsung_sky_bank',
+          'samsung_cobalt_visa', 'samsung_gold_card', 'samsung_teal_transfer', 'samsung_obsidian_card',
+          'beige', 'caramel', 'terracotta', 'honey', 'olive', 'sage',
+          'pistachio', 'mint', 'teal', 'sky', 'lavender', 'charcoal'
+        ])
+        && (!('navIcons' in data) || isValidNavIconsMap(data.navIcons))
+        && (!('refreshRateHz' in data) || data.refreshRateHz in [60, 90, 120])
+        && (!('notificationSettings' in data) || isValidNotificationSettings(data.notificationSettings))
+        && (!('hideAmounts' in data) || data.hideAmounts is bool)
+        && (!('showPrivacyToggle' in data) || data.showPrivacyToggle is bool)
+        && (!('hideWalletAmounts' in data) || data.hideWalletAmounts is bool)
+        && (!('showWalletPrivacyToggle' in data) || data.showWalletPrivacyToggle is bool)
+        && (!('wallpaperId' in data) || isValidWallpaperId(data.wallpaperId))
+        && (!('walletIcons' in data) || isValidWalletIconsMap(data.walletIcons))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidDebtStatus(totalAmount, paidAmount, status) {
+      return (paidAmount == 0 && status == 'نشط')
+        || (paidAmount > 0 && paidAmount < totalAmount && status == 'جزئي')
+        || (paidAmount == totalAmount && status == 'محصل');
+    }
+
+    function isValidDebt(data) {
+      return data.keys().hasAll([
+          'ownerId', 'direction', 'debtorName', 'debtorPhone', 'avatarId',
+          'title', 'category', 'totalAmount', 'paidAmount', 'currency',
+          'givenDate', 'dueDate', 'installmentPlan', 'status', 'notes',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'direction', 'debtorName', 'debtorPhone', 'avatarId',
+          'title', 'category', 'totalAmount', 'paidAmount', 'currency',
+          'givenDate', 'dueDate', 'installmentPlan', 'status', 'notes',
+          'alertLevel', 'alertNote',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.ownerId)
+        && data.ownerId == request.auth.uid
+        && data.direction in ['receivable', 'payable']
+        && data.debtorName is string && data.debtorName.size() >= 1 && data.debtorName.size() <= 100
+        && data.debtorPhone is string && data.debtorPhone.size() <= 30
+        && data.avatarId is string && data.avatarId.size() >= 1 && data.avatarId.size() <= 120000
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 140
+        && data.category in ['سلفة شخصية', 'تجارة وبضاعة', 'شراكة وعمل', 'أخرى']
+        && data.totalAmount is number && data.totalAmount > 0 && data.totalAmount <= 1000000000
+        && data.paidAmount is number && data.paidAmount >= 0 && data.paidAmount <= data.totalAmount
+        && isValidCurrency(data.currency)
+        && isValidDateString(data.givenDate)
+        && isValidDateString(data.dueDate)
+        && data.installmentPlan in ['دفعة واحدة', 'أقساط شهرية', 'دفعات مرنة']
+        && isValidDebtStatus(data.totalAmount, data.paidAmount, data.status)
+        && data.notes is string && data.notes.size() <= 500
+        && (!('alertLevel' in data) || data.alertLevel in ['none', 'warning', 'urgent', 'reminder'])
+        && (!('alertNote' in data) || (data.alertNote is string && data.alertNote.size() <= 80))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPayment(data, debtId) {
+      return data.keys().hasAll(['ownerId', 'debtId', 'amount', 'paymentDate', 'method', 'note', 'createdAt'])
+        && data.keys().hasOnly(['ownerId', 'debtId', 'amount', 'paymentDate', 'method', 'note', 'createdAt'])
+        && isValidId(data.ownerId)
+        && data.ownerId == request.auth.uid
+        && isValidId(data.debtId)
+        && data.debtId == debtId
+        && data.amount is number && data.amount > 0 && data.amount <= 1000000000
+        && isValidDateString(data.paymentDate)
+        && data.method in ['نقدي', 'تحويل بنكي', 'محفظة إلكترونية', 'أخرى']
+        && data.note is string && data.note.size() <= 200
+        && data.createdAt is timestamp;
+    }
+
+    function isValidCharge(data, debtId) {
+      return data.keys().hasAll(['ownerId', 'debtId', 'amount', 'chargeDate', 'note', 'createdAt'])
+        && data.keys().hasOnly(['ownerId', 'debtId', 'amount', 'chargeDate', 'note', 'createdAt'])
+        && isValidId(data.ownerId)
+        && data.ownerId == request.auth.uid
+        && isValidId(data.debtId)
+        && data.debtId == debtId
+        && data.amount is number && data.amount > 0 && data.amount <= 1000000000
+        && isValidDateString(data.chargeDate)
+        && data.note is string && data.note.size() <= 200
+        && data.createdAt is timestamp;
+    }
+
+    function isValidWalletTx(data) {
+      return data.keys().hasAll(['ownerId', 'walletId', 'walletType', 'type', 'amount', 'note', 'createdAt'])
+        && data.keys().hasOnly(['ownerId', 'walletId', 'walletType', 'walletLabel', 'type', 'amount', 'note', 'createdAt'])
+        && isValidId(data.ownerId)
+        && data.ownerId == request.auth.uid
+        && isValidId(data.walletId)
+        && isValidId(data.walletType)
+        && (!('walletLabel' in data) || (data.walletLabel is string && data.walletLabel.size() <= 60))
+        && data.type in ['add', 'withdraw']
+        && data.amount is number && data.amount > 0 && data.amount <= 1000000000
+        && data.note is string && data.note.size() <= 140
+        && data.createdAt is timestamp;
+    }
+
+    function isValidWallet(data) {
+      return data.keys().hasAll([
+          'ownerId', 'walletType', 'label', 'balance', 'currency',
+          'isHidden', 'recentNote', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'walletType', 'label', 'iconId', 'balance', 'currency',
+          'isHidden', 'recentNote', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.ownerId)
+        && data.ownerId == request.auth.uid
+        && isValidId(data.walletType)
+        && data.label is string && data.label.size() >= 1 && data.label.size() <= 60
+        && (!('iconId' in data) || isValidWallpaperId(data.iconId))
+        && data.balance is number && data.balance >= 0 && data.balance <= 1000000000
+        && isValidCurrency(data.currency)
+        && data.isHidden is bool
+        && data.recentNote is string && data.recentNote.size() <= 140
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidVaultId(id) {
+      return id is string && id.size() == 64 && id.matches('^[a-f0-9]{64}$');
+    }
+
+    function isValidBackupVault(data, vaultId) {
+      return data.keys().hasAll([
+          'vaultId', 'version', 'profile', 'debts', 'paymentsByDebt',
+          'chargesByDebt', 'wallets', 'walletTxs', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'vaultId', 'version', 'profile', 'debts', 'paymentsByDebt',
+          'chargesByDebt', 'wallets', 'walletTxs', 'createdAt', 'updatedAt'
+        ])
+        && isValidVaultId(data.vaultId)
+        && data.vaultId == vaultId
+        && data.version == 2
+        && data.profile is map && data.profile.size() <= 50
+        && data.debts is list && data.debts.size() <= 500
+        && data.paymentsByDebt is map && data.paymentsByDebt.size() <= 500
+        && data.chargesByDebt is map && data.chargesByDebt.size() <= 500
+        && data.wallets is list && data.wallets.size() <= 20
+        && data.walletTxs is list && data.walletTxs.size() <= 500
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && isOwner(userId);
+      allow list: if false;
+
+      allow create: if isVerified()
+        && isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerified()
+        && isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming())
+        && (!('uid' in existing()) || incoming().uid == existing().uid)
+        && (
+          ('createdAt' in existing() && existing().createdAt is timestamp)
+            ? incoming().createdAt == existing().createdAt
+            : incoming().createdAt == request.time
+        )
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).changedKeys().hasOnly([
+          'displayName', 'avatarUrl', 'statusActive', 'statusLabel',
+          'statusColor', 'avatarRingColor', 'avatarRingStyle',
+          'theme', 'followPhoneTheme', 'autoAppIconByTheme',
+          'language', 'defaultCurrency',
+          'iconSize', 'navIconSize', 'avatarSize', 'profileAvatarSize', 'walletImageSize',
+          'iconStyle', 'sectionIconStyles', 'pageSettings',
+          'navSoundEnabled', 'appIconId', 'navIcons',
+          'refreshRateHz', 'notificationSettings',
+          'hideAmounts', 'showPrivacyToggle',
+          'hideWalletAmounts', 'showWalletPrivacyToggle', 'wallpaperId', 'walletIcons',
+          'createdAt', 'updatedAt'
+        ]);
+
+      allow delete: if false;
+    }
+
+    match /debts/{debtId} {
+      allow get: if isSignedIn() && isValidId(debtId) && (resource == null || existing().ownerId == request.auth.uid);
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      allow create: if isVerified()
+        && isValidId(debtId)
+        && isValidDebt(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerified()
+        && isValidId(debtId)
+        && existing().ownerId == request.auth.uid
+        && isValidDebt(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action 3: Add a new amount on the person (allowed even if previously settled)
+          (
+            incoming().totalAmount > existing().totalAmount
+            && incoming().paidAmount == existing().paidAmount
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'totalAmount', 'status', 'updatedAt'
+            ])
+          )
+          ||
+          // Action 1: Edit debt details (paidAmount remains unchanged)
+          (
+            existing().status != 'محصل'
+            && incoming().paidAmount == existing().paidAmount
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'direction', 'debtorName', 'debtorPhone', 'avatarId', 'title',
+              'category', 'totalAmount', 'currency', 'givenDate', 'dueDate',
+              'installmentPlan', 'status', 'notes', 'alertLevel', 'alertNote', 'updatedAt'
+            ])
+          )
+          ||
+          // Action 2: Log a payment / collection (increases paidAmount)
+          (
+            existing().status != 'محصل'
+            && incoming().paidAmount > existing().paidAmount
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'direction', 'avatarId', 'paidAmount', 'status', 'updatedAt'
+            ])
+          )
+          ||
+          // Action 4: Quick optional alert/warning update on a person
+          (
+            incoming().totalAmount == existing().totalAmount
+            && incoming().paidAmount == existing().paidAmount
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'alertLevel', 'alertNote', 'updatedAt'
+            ])
+          )
+        );
+
+      allow delete: if isVerified() && isValidId(debtId) && existing().ownerId == request.auth.uid;
+
+      match /payments/{paymentId} {
+        allow get: if isSignedIn()
+          && isValidId(debtId)
+          && isValidId(paymentId)
+          && existing().ownerId == request.auth.uid
+          && get(/databases/$(database)/documents/debts/$(debtId)).data.ownerId == request.auth.uid;
+
+        allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+        allow create: if isVerified()
+          && isValidId(debtId)
+          && isValidId(paymentId)
+          && isValidPayment(incoming(), debtId)
+          && incoming().createdAt == request.time
+          && (
+            (
+              exists(/databases/$(database)/documents/debts/$(debtId))
+              && get(/databases/$(database)/documents/debts/$(debtId)).data.ownerId == request.auth.uid
+              && get(/databases/$(database)/documents/debts/$(debtId)).data.status != 'محصل'
+              && getAfter(/databases/$(database)/documents/debts/$(debtId)).data.paidAmount >=
+                 get(/databases/$(database)/documents/debts/$(debtId)).data.paidAmount + incoming().amount - 0.01
+              && getAfter(/databases/$(database)/documents/debts/$(debtId)).data.paidAmount <=
+                 get(/databases/$(database)/documents/debts/$(debtId)).data.paidAmount + incoming().amount + 0.01
+            )
+            ||
+            (
+              !exists(/databases/$(database)/documents/debts/$(debtId))
+              && existsAfter(/databases/$(database)/documents/debts/$(debtId))
+              && getAfter(/databases/$(database)/documents/debts/$(debtId)).data.ownerId == request.auth.uid
+              && getAfter(/databases/$(database)/documents/debts/$(debtId)).data.paidAmount == incoming().amount
+            )
+          );
+
+        allow update: if false;
+
+        allow delete: if isVerified()
+          && isValidId(debtId)
+          && isValidId(paymentId)
+          && existing().ownerId == request.auth.uid
+          && get(/databases/$(database)/documents/debts/$(debtId)).data.ownerId == request.auth.uid;
+      }
+    }
+
+    match /debts/{debtId}/charges/{chargeId} {
+      allow get: if isSignedIn()
+        && isValidId(debtId)
+        && isValidId(chargeId)
+        && existing().ownerId == request.auth.uid
+        && get(/databases/$(database)/documents/debts/$(debtId)).data.ownerId == request.auth.uid;
+
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      allow create: if isVerified()
+        && isValidId(debtId)
+        && isValidId(chargeId)
+        && isValidCharge(incoming(), debtId)
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/debts/$(debtId))
+        && get(/databases/$(database)/documents/debts/$(debtId)).data.ownerId == request.auth.uid
+        && getAfter(/databases/$(database)/documents/debts/$(debtId)).data.totalAmount >=
+           get(/databases/$(database)/documents/debts/$(debtId)).data.totalAmount + incoming().amount - 0.01
+        && getAfter(/databases/$(database)/documents/debts/$(debtId)).data.totalAmount <=
+           get(/databases/$(database)/documents/debts/$(debtId)).data.totalAmount + incoming().amount + 0.01;
+
+      allow update: if false;
+
+      allow delete: if isVerified()
+        && isValidId(debtId)
+        && isValidId(chargeId)
+        && existing().ownerId == request.auth.uid
+        && get(/databases/$(database)/documents/debts/$(debtId)).data.ownerId == request.auth.uid;
+    }
+
+    match /walletTransactions/{txId} {
+      allow get: if isSignedIn() && isValidId(txId) && (resource == null || existing().ownerId == request.auth.uid);
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      allow create: if isVerified()
+        && isValidId(txId)
+        && isValidWalletTx(incoming())
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/wallets/$(incoming().walletId))
+        && get(/databases/$(database)/documents/wallets/$(incoming().walletId)).data.ownerId == request.auth.uid
+        && (
+          (
+            incoming().type == 'add'
+            && getAfter(/databases/$(database)/documents/wallets/$(incoming().walletId)).data.balance >=
+               get(/databases/$(database)/documents/wallets/$(incoming().walletId)).data.balance + incoming().amount - 0.01
+            && getAfter(/databases/$(database)/documents/wallets/$(incoming().walletId)).data.balance <=
+               get(/databases/$(database)/documents/wallets/$(incoming().walletId)).data.balance + incoming().amount + 0.01
+          )
+          ||
+          (
+            incoming().type == 'withdraw'
+            && getAfter(/databases/$(database)/documents/wallets/$(incoming().walletId)).data.balance >=
+               get(/databases/$(database)/documents/wallets/$(incoming().walletId)).data.balance - incoming().amount - 0.01
+            && getAfter(/databases/$(database)/documents/wallets/$(incoming().walletId)).data.balance <=
+               get(/databases/$(database)/documents/wallets/$(incoming().walletId)).data.balance - incoming().amount + 0.01
+          )
+        );
+
+      allow update: if false;
+      allow delete: if isVerified() && isValidId(txId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /wallets/{walletId} {
+      allow get: if isSignedIn() && isValidId(walletId) && (resource == null || existing().ownerId == request.auth.uid);
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      allow create: if isVerified()
+        && isValidId(walletId)
+        && isValidWallet(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerified()
+        && isValidId(walletId)
+        && existing().ownerId == request.auth.uid
+        && isValidWallet(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().walletType == existing().walletType
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'label', 'iconId', 'balance', 'currency', 'isHidden', 'recentNote', 'updatedAt'
+        ]);
+
+      allow delete: if isVerified() && isValidId(walletId) && existing().ownerId == request.auth.uid;
+    }
+
+    // Backup-only vaults keyed by 64-char SHA-256 hash of user email/phone (zero raw PII stored; list & delete forbidden)
+    match /backupVaults/{vaultId} {
+      allow get: if isValidVaultId(vaultId);
+      allow list: if false;
+
+      allow create: if isValidVaultId(vaultId)
+        && isValidBackupVault(incoming(), vaultId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isValidVaultId(vaultId)
+        && isValidBackupVault(incoming(), vaultId)
+        && incoming().vaultId == existing().vaultId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'profile', 'debts', 'paymentsByDebt', 'chargesByDebt',
+          'wallets', 'walletTxs', 'updatedAt'
+        ]);
+
+      allow delete: if false;
+    }
+  }
+}
